@@ -1,75 +1,50 @@
 #!/usr/bin/python3
 """
-Python script that converts a Markdown file to HTML.
-Parses headings, unordered list, and ordered list syntax.
+A script that converts Markdown to HTML.
 """
 
 import sys
 import os
 import re
 
-
-def parse_heading(line):
+def convert_markdown_to_html(input_file, output_file):
     """
-    Parse Markdown heading syntax and generate HTML tag.
+    Converts a Markdown file to HTML and writes the output to a file.
     """
-    match = re.match(r'^(#+)\s(.*)$', line)
-    if match:
-        level = len(match.group(1))
-        content = match.group(2)
-        return f'<h{level}>{content}</h{level}>\n'
-    return line
+    # Check that the Markdown file exists and is a file
+    if not (os.path.exists(input_file) and os.path.isfile(input_file)):
+        print(f"Missing {input_file}", file=sys.stderr)
+        sys.exit(1)
 
+    # Read the Markdown file and convertt it to HTML
+    with open(input_file, encoding="utf-8") as f:
+        html_lines = []
+        for line in f:
+            # Check for Markdown headings
+            match = re.match(r"^(#+) (.*)$", line)
+            if match:
+                heading_level = len(match.group(1))
+                heading_text = match.group(2)
+                html_lines.append(f"<h{heading_level}>{heading_text}</h{heading_level}>")
+            else:
+                html_lines.append(line.rstrip())
 
-def parse_unordered_list(line):
-    """
-    Parse Markdown unordered list syntax and generate HTML tag.
-    """
-    match = re.match(r'^-\s(.*)$', line)
-    if match:
-        item = match.group(1)
-        return f'<li>{item}</li>\n'
-    return line
+    # Write the HTML output to a file
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(html_lines))
 
-
-def parse_ordered_list(line):
-    """
-    Parse Markdown ordered list syntax and generate HTML tag.
-    """
-    match = re.match(r'^\*\s(.*)$', line)
-    if match:
-        item = match.group(1)
-        return f'<li>{item}</li>\n'
-    return line
-
-
-if __name__ == '__main__':
-    # Check if correct number of arguments provided
+if __name__ == "__main__":
+    # Check that the correct number of arguments were provided
     if len(sys.argv) != 3:
-        print("Usage: ./markdown2html.py <input_file> <output_file>",
-              file=sys.stderr)
+        print("Usage: ./markdown2html.py <input_file> <output_file>", file=sys.stderr)
         sys.exit(1)
 
-    markdown_file = sys.argv[1]
-    html_file = sys.argv[2]
+    # Get the input and output file names from the command-line arguments
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
 
-    # Check if the Markdown file exists
-    if not os.path.exists(markdown_file):
-        print(f"Missing {markdown_file}", file=sys.stderr)
-        sys.exit(1)
+    # Convert the Markdown file to the HTML and write the output to a file
+    convert_markdown_to_html(input_file, output_file)
 
-    # Read Markdown content and parse headings
-    # unordered lists, and ordered lists
-    with open(markdown_file, 'r') as md_file:
-        md_content = md_file.readlines()
-
-    html_content = []
-    for line in md_content:
-        html_line = parse_heading(line)
-        html_line = parse_unordered_list(html_line)
-        html_line = parse_ordered_list(html_line)
-        html_content.append(html_line)
-
-    # Write HTML content to output file
-    with open(html_file, 'w') as html_output:
-        html_output.writelines(html_content)
+    # Exit  with a successful status code
+    sys.exit(0)
